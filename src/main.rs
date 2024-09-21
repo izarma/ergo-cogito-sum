@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use plugins::game_runner::GameRunnerPlugin;
+use plugins::lobby::LobbyPlugin;
 use plugins::main_menu::MainMenuPlugin;
 
 mod components;
@@ -7,18 +8,19 @@ mod resources;
 mod systems;
 mod plugins;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Resource)]
+#[derive(Debug, Eq, PartialEq, Hash, Resource, States, Default, Clone)]
 enum GameState {
+    #[default]
     MainMenu,
     Lobby,
-    InGame,
 }
  
 fn main() {
     App::new()
+        .init_state::<GameState>()
         .add_plugins(DefaultPlugins)
-        .insert_resource(GameState::MainMenu)
         .add_plugins(MainMenuPlugin)
         .add_plugins(GameRunnerPlugin)
+        //.add_plugins(LobbyPlugin)
         .run();
 }
