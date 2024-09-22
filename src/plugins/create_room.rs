@@ -1,41 +1,36 @@
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-
 use crate::GameState;
 use crate::consts;
+use bevy::window::PrimaryWindow;
 
-pub struct MainMenuPlugin;
-
-// Component for marking buttons (Host or Join)
-
-#[derive(Component)]
-struct HostButton;
+pub struct RoomCreator;
 
 #[derive(Component)]
-struct JoinButton;
+struct OnRoomCreatorScreen;
 
 #[derive(Component)]
-struct OnMainMenuScreen;
+struct PublicButton;
 
-impl Plugin for MainMenuPlugin {
+#[derive(Component)]
+struct PrivateButton;
+
+impl Plugin for RoomCreator {
     fn build(&self, app: &mut App) {
         app
-
-        .add_systems(OnEnter(GameState::MainMenu),setup_main_menu)
-        .add_systems(Update, button_interaction_system.run_if(in_state(GameState::MainMenu)))
-        .add_systems(OnExit(GameState::MainMenu),cleanup_menu);
-
+        .add_systems(OnEnter(GameState::CreateRoom),setup_room_selector)
+        .add_systems(Update, room_button_interaction_system.run_if(in_state(GameState::CreateRoom)))
+        .add_systems(OnExit(GameState::CreateRoom),cleanup_menu);
     }
 }
 
 // System to setup the main menu UI
-fn setup_main_menu(
+fn setup_room_selector(
     mut commands: Commands,
     window_query: Query<&Window, With<PrimaryWindow>>,
     asset_server: Res<AssetServer>,
 ) {
     let _window: &Window = window_query.get_single().unwrap();
-    // UI setup with Host and Join buttons
+    // UI setup with Public and Private Room buttons
     
     commands
         .spawn((NodeBundle {
@@ -48,10 +43,10 @@ fn setup_main_menu(
             },
             ..Default::default()
         },
-        OnMainMenuScreen,))
+        OnRoomCreatorScreen,))
         .with_children(|parent| {
             parent
-                // Host Button
+                // Public Room Button
                 .spawn(ButtonBundle {
                     style: Style {
                         margin: UiRect::all(Val::Px(10.0)),
@@ -63,10 +58,10 @@ fn setup_main_menu(
                     background_color: consts::NORMAL_BUTTON.into(),
                     ..Default::default()
                 })
-                .insert(HostButton)
+                .insert(PublicButton)
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "Host Game",
+                        "Public Room",
                         TextStyle {
                             font: asset_server.load("fonts/Debrosee-ALPnL.ttf"),
                             font_size: 40.0,
@@ -76,7 +71,7 @@ fn setup_main_menu(
                 });
 
             parent
-                // Join Button
+                // Private Button
                 .spawn(ButtonBundle {
                     style: Style {
                         margin: UiRect::all(Val::Px(10.0)),
@@ -88,10 +83,10 @@ fn setup_main_menu(
                     background_color: consts::NORMAL_BUTTON.into(),
                     ..Default::default()
                 })
-                .insert(JoinButton)
+                .insert(PrivateButton)
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "Join Game",
+                        "Private Room",
                         TextStyle {
                             font: asset_server.load("fonts/Debrosee-ALPnL.ttf"),
                             font_size: 40.0,
@@ -103,21 +98,21 @@ fn setup_main_menu(
 }
 
 // System to handle button interaction
-fn button_interaction_system(
+fn room_button_interaction_system(
     mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, Option<&HostButton>, Option<&JoinButton>),
+        (&Interaction, &mut BackgroundColor, Option<&PublicButton>, Option<&PrivateButton>),
         (Changed<Interaction>, With<Button>),
     >,
     mut game_state: ResMut<NextState<GameState>>
 ) {
-    for (interaction, mut color, host_button, join_button) in interaction_query.iter_mut() {
+    for (interaction, mut color, public_button, private_button) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
-                if host_button.is_some() {
-                    println!("Host Game Button Clicked");// Switch to Lobby state
-                    game_state.set(GameState::CreateRoom);
-                } else if join_button.is_some() {
-                    println!("Join Game Button Clicked");// Switch to Lobby state
+                if public_button.is_some() {
+                    println!("Public Game Button Clicked");// Switch to Lobby state
+                    game_state.set(GameState::MainMenu);
+                } else if private_button.is_some() {
+                    println!("Pivate Game Button Clicked");// Switch to Lobby state
                     game_state.set(GameState::Lobby);
                 }
             }
@@ -132,7 +127,7 @@ fn button_interaction_system(
 }
 
 // System to cleanup menu when exiting MainMenu state
-fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMainMenuScreen>>) {
+fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnRoomCreatorScreen>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }
