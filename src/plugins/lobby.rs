@@ -6,7 +6,8 @@ pub struct LobbyPlugin;
 
 impl Plugin for LobbyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Lobby), setup_lobby_ui)
+        app
+        .add_systems(OnEnter(GameState::Lobby), setup_lobby_ui)
             .add_systems(OnExit(GameState::Lobby), cleanup_lobby);
     }
 }

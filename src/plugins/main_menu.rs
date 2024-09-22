@@ -13,12 +13,21 @@ struct HostButton;
 #[derive(Component)]
 struct JoinButton;
 
+#[derive(Component)]
+struct OnMainMenuScreen;
+
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
-        .add_systems(Update, button_interaction_system)
-        .add_systems(OnExit(GameState::MainMenu), cleanup_menu);
+
+        .add_systems(OnEnter(GameState::MainMenu),setup_main_menu)
+        .add_systems(Update, button_interaction_system.run_if(in_state(GameState::MainMenu)))
+        .add_systems(OnExit(GameState::MainMenu),cleanup_menu);
+
     }
 }
 
@@ -30,9 +39,9 @@ fn setup_main_menu(
 ) {
     let _window: &Window = window_query.get_single().unwrap();
     // UI setup with Host and Join buttons
-    commands.spawn(Camera2dBundle::default());
+    
     commands
-        .spawn(NodeBundle {
+        .spawn((NodeBundle {
             style: Style {
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -41,7 +50,8 @@ fn setup_main_menu(
                 ..Default::default()
             },
             ..Default::default()
-        })
+        },
+        OnMainMenuScreen,))
         .with_children(|parent| {
             parent
                 // Host Button
@@ -53,6 +63,7 @@ fn setup_main_menu(
                         position_type: PositionType::Relative,
                         ..Default::default()
                     },
+                    background_color: NORMAL_BUTTON.into(),
                     ..Default::default()
                 })
                 .insert(HostButton)
@@ -77,6 +88,7 @@ fn setup_main_menu(
                         position_type: PositionType::Relative,
                         ..Default::default()
                     },
+                    background_color: NORMAL_BUTTON.into(),
                     ..Default::default()
                 })
                 .insert(JoinButton)
@@ -113,17 +125,17 @@ fn button_interaction_system(
                 }
             }
             Interaction::Hovered => {
-                *color = Color::srgb(0.8, 0.8, 0.8).into();
+                *color = HOVERED_BUTTON.into();
             }
             Interaction::None => {
-                *color = Color::srgb(0.25, 0.25, 0.25).into();
+                *color = NORMAL_BUTTON.into();
             }
         }
     }
 }
 
 // System to cleanup menu when exiting MainMenu state
-fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<Node>>) {
+fn cleanup_menu(mut commands: Commands, query: Query<Entity, With<OnMainMenuScreen>>) {
     for entity in query.iter() {
         commands.entity(entity).despawn_recursive();
     }

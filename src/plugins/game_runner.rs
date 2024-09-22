@@ -20,6 +20,7 @@ fn add_players(mut commands: Commands) {
     commands.spawn((components::person::Person, components::person::Name("Nimdok".to_string())));
     commands.spawn((components::person::Person, components::person::Name("Ted".to_string())));
     commands.spawn((components::person::Person, components::person::Name("AM".to_string()))); // AI player
+    commands.spawn(Camera2dBundle::default());
 }
 
 fn welcome_monologue() {

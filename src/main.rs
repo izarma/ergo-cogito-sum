@@ -17,10 +17,8 @@ enum GameState {
  
 fn main() {
     App::new()
-        .init_state::<GameState>()
         .add_plugins(DefaultPlugins)
-        .add_plugins(MainMenuPlugin)
-        .add_plugins(GameRunnerPlugin)
-        //.add_plugins(LobbyPlugin)
+        .init_state::<GameState>()
+        .add_plugins((GameRunnerPlugin,MainMenuPlugin,LobbyPlugin))
         .run();
 }
