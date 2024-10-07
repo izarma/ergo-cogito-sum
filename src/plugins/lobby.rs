@@ -14,7 +14,6 @@ impl Plugin for LobbyPlugin {
 
 // System to setup the lobby UI
 fn setup_lobby_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
 
     let font = asset_server.load("fonts/Debrosee-ALPnL.ttf");
 

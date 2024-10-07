@@ -3,6 +3,7 @@ use plugins::game_runner::GameRunnerPlugin;
 use plugins::lobby::LobbyPlugin;
 use plugins::main_menu::MainMenuPlugin;
 use plugins::create_room::RoomCreator;
+use plugins::ingame_player::PlayerInGamePlugin;
 
 mod components;
 mod resources;
@@ -23,6 +24,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<GameState>()
-        .add_plugins((GameRunnerPlugin,MainMenuPlugin,LobbyPlugin,RoomCreator))
+        .add_plugins((GameRunnerPlugin,MainMenuPlugin,LobbyPlugin,RoomCreator,PlayerInGamePlugin))
         .run();
 }

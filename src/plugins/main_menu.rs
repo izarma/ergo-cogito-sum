@@ -118,7 +118,7 @@ fn button_interaction_system(
                     game_state.set(GameState::CreateRoom);
                 } else if join_button.is_some() {
                     println!("Join Game Button Clicked");// Switch to Lobby state
-                    game_state.set(GameState::Lobby);
+                    game_state.set(GameState::InGame);
                 }
             }
             Interaction::Hovered => {
