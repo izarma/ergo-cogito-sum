@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use std::time::Duration;
 use crate::GameState;
+use leafwing_input_manager::prelude::*;
 
 pub struct PlayerInGamePlugin;
 
@@ -10,6 +11,55 @@ struct SpriteAnimState {
     end_index: usize,
     timer: Timer,
 }
+
+#[derive(Component)]
+struct Player;
+
+#[derive(Component, PartialEq, Eq, Debug, Clone, Copy)]
+enum PlayerState {
+    Idle,
+    Walking,
+    Running,
+    Attacking,
+    Hurt,
+    Dead,
+}
+
+#[derive(Component)]
+struct PlayerInputState {
+    movement_velocity: Vec2,
+    speed_multiplier: f32,
+}
+
+#[derive(Bundle)]
+struct PlayerBundle {
+    sprite_sheet_bundle: SpriteBundle,
+    marker: Player,
+    state: PlayerState,
+    input_state: PlayerInputState,
+    anim_state: SpriteAnimState,
+}
+
+#[derive(Resource)]
+struct PlayerAnimations {
+    idle: Animation,
+    walk: Animation,
+    attack: Animation,
+}
+
+struct Animation {
+    frames: usize,
+    texture_atlas_handle: Handle<TextureAtlasLayout>,
+}
+
+// This is the list of "things in the game I want to be able to do based on input"
+#[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
+enum Action {
+    Walk,
+    Run,
+    Attack,}
+
+
 
 impl Plugin for PlayerInGamePlugin {
     fn build(&self, app: &mut App) {
@@ -25,29 +75,74 @@ fn setup_sprite_animation(
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    
-    let explosion_img = asset_server.load("sprites/explosion.png");
-    
-    // Create the TextureAtlas from the sprite sheet (8 columns, 6 rows)
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(67.0 as u32, 67.0 as u32), 8, 6, None, None);
-    let layout_handle = texture_atlases.add(layout);
+    // Load textures for each animation
+    let idle_texture_handle = asset_server.load("sprites/City_men_3/Idle.png");
+    //let walk_texture_handle = asset_server.load("sprites/City_men_3/Walk.png");
+    //let attack_texture_handle = asset_server.load("sprites/City_men_3/Attack.png");
 
-    commands.spawn((
-        SpriteBundle {
-            texture: explosion_img,
+    let idle_frames = 6;
+    let walk_frames = 10;
+    let _run_frames = 10;
+    let attack_frames = 4;
+    let _hurt_frames = 3;
+    let _dead_frames = 5;
+
+     // Define frame sizes
+    let frame_size = UVec2::new(128, 128);
+
+    // Create TextureAtlasLayouts
+    let idle_layout = TextureAtlasLayout::from_grid(frame_size, idle_frames, 1, None, None);
+    let idle_layout_handle = texture_atlases.add(idle_layout);
+
+    let walk_layout = TextureAtlasLayout::from_grid(frame_size, walk_frames, 1, None, None);
+    let walk_layout_handle = texture_atlases.add(walk_layout);
+
+    let attack_layout = TextureAtlasLayout::from_grid(frame_size, attack_frames, 1, None, None);
+    let attack_layout_handle = texture_atlases.add(attack_layout);    
+    
+    // Store animations in a resource
+    commands.insert_resource(PlayerAnimations {
+        idle: Animation {
+            frames: idle_frames as usize,
+            texture_atlas_handle: idle_layout_handle.clone(),
+        },
+        walk: Animation {
+            frames: walk_frames as usize,
+            texture_atlas_handle: walk_layout_handle.clone(),
+        },
+        attack: Animation {
+            frames: attack_frames as usize,
+            texture_atlas_handle: attack_layout_handle.clone(),
+        },
+    });
+    
+
+    // Spawn player entity using PlayerBundle
+    commands.spawn((PlayerBundle {
+        sprite_sheet_bundle: SpriteBundle {
+            texture: idle_texture_handle,
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         },
-        TextureAtlas {
-            layout: layout_handle,
-            index: 0,
+        marker: Player,
+        state: PlayerState::Idle,
+        input_state: PlayerInputState {
+            movement_velocity: Vec2::ZERO,
+            speed_multiplier: 150.0,
         },
-        SpriteAnimState {
+        anim_state: SpriteAnimState {
             start_index: 0,
-            end_index: 47, // Assuming there are 48 frames (8 * 6)
-            timer: Timer::new(Duration::from_secs_f64(1.0 / 12.0), TimerMode::Repeating),
+            end_index: idle_frames as usize - 1,
+            timer: Timer::from_seconds(0.1, TimerMode::Repeating),
         },
-    ));
+    },
+    TextureAtlas {
+        layout: idle_layout_handle,
+        index: 0,
+    },
+));
 }
+
 
 fn animate_sprite(
     time: Res<Time>,
